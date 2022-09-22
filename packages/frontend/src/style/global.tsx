@@ -1,4 +1,5 @@
 import { createGlobalStyle } from 'styled-components'
+import { theme } from 'style/theme'
 
 export const Styles = createGlobalStyle`
   /***
@@ -89,5 +90,8 @@ export const Styles = createGlobalStyle`
     position: relative;
     min-height: 100vh;
     z-index: 1;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+    font-size: 16px;
+    background-color: ${theme.back};
   }
 `
