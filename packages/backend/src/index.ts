@@ -14,22 +14,20 @@ type QueryParams = Partial<{
   filter_value: string
 }>
 
-const data = _data as DataType
-
 app.get('/', (req, res) => {
+  let data = _data as DataType
   const { page, limit, sort, sort_order, filter, filter_type, filter_value } =
     req.query as QueryParams
   if (!page || !limit)
     return res.send({
       error: 'Missing pagination query parameters',
     })
-  let slice = data.slice(+page * +limit, +limit)
   if (sort && sort_order)
-    slice.sort((a, b) =>
+    data.sort((a, b) =>
       sort_order === '-' ? +a[sort] - +b[sort] : +b[sort] - +a[sort],
     )
   if (filter && filter_type && filter_value)
-    slice = slice.filter(v => {
+    data = data.filter(v => {
       const value = v[filter]
       switch (filter_type) {
         case 'equals':
@@ -42,7 +40,9 @@ app.get('/', (req, res) => {
           return +value > +filter_value
       }
     })
-  res.header('Content-Length', String(data.length)).send(slice)
+  res
+    .header('Content-Length', String(data.length))
+    .send(data.slice(+page * +limit, +limit))
 })
 
 app.listen(3264, '0.0.0.0', () => console.log('Server listening at 3264'))
