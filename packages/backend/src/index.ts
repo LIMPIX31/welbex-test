@@ -1,4 +1,5 @@
 import express from 'express'
+import cors from 'cors'
 import _data from './db.json'
 const app = express()
 
@@ -13,6 +14,8 @@ type QueryParams = Partial<{
   filter_type: 'equals' | 'more_than' | 'less_than' | 'contains'
   filter_value: string
 }>
+
+app.use(cors())
 
 app.get('/', (req, res) => {
   let data = _data as DataType
