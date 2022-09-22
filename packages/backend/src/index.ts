@@ -9,7 +9,7 @@ type QueryParams = Partial<{
   page: string
   limit: string
   sort: string
-  sort_order: '+' | '-'
+  sort_order: 'ascending' | 'descending'
   filter: string
   filter_type: 'equals' | 'more_than' | 'less_than' | 'contains'
   filter_value: string
@@ -27,7 +27,7 @@ app.get('/', (req, res) => {
     })
   if (sort && sort_order)
     data.sort((a, b) =>
-      sort_order === '-' ? +a[sort] - +b[sort] : +b[sort] - +a[sort],
+      sort_order === 'ascending' ? +a[sort] - +b[sort] : +b[sort] - +a[sort],
     )
   if (filter && filter_type && filter_value)
     data = data.filter(v => {
