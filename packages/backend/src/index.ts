@@ -15,7 +15,11 @@ type QueryParams = Partial<{
   filter_value: string
 }>
 
-app.use(cors())
+app.use(
+  cors({
+    exposedHeaders: 'Total-Count',
+  }),
+)
 
 app.get('/', (req, res) => {
   let data = [..._data] as DataType
@@ -53,7 +57,7 @@ app.get('/', (req, res) => {
       }
     })
   res
-    .header('Content-Length', String(data.length))
+    .header('Total-Count', String(data.length))
     .send(data.slice(+page * +limit, +page * +limit + +limit))
 })
 
