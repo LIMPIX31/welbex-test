@@ -18,7 +18,7 @@ type QueryParams = Partial<{
 app.use(cors())
 
 app.get('/', (req, res) => {
-  let data = _data as DataType
+  let data = [..._data] as DataType
   const { page, limit, sort, sort_order, filter, filter_type, filter_value } =
     req.query as QueryParams
   if (!page || !limit)
@@ -26,9 +26,18 @@ app.get('/', (req, res) => {
       error: 'Missing pagination query parameters',
     })
   if (sort && sort_order)
-    data.sort((a, b) =>
-      sort_order === 'ascending' ? +a[sort] - +b[sort] : +b[sort] - +a[sort],
-    )
+    data.sort((a, b) => {
+      const avalue: string | boolean | number = a[sort]
+      const bvalue = b[sort]
+      if (typeof avalue === 'string' && typeof bvalue === 'string')
+        return sort_order === 'ascending'
+          ? avalue.localeCompare(String(bvalue))
+          : bvalue.localeCompare(String(avalue))
+      else
+        return sort_order === 'ascending'
+          ? +avalue - +bvalue
+          : +avalue - +bvalue
+    })
   if (filter && filter_type && filter_value)
     data = data.filter(v => {
       const value = v[filter]
