@@ -1,1 +1,1 @@
-declare type Primitive = string | number | boolean | null | undefined
+declare type Primitive = string | number | boolean

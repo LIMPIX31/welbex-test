@@ -1,6 +1,8 @@
-import { FC } from 'react'
+import { FC, useState } from 'react'
 import styled from 'styled-components'
 import { Table } from 'components/Table'
+import { useData } from 'hooks/useData'
+import { ResponseData } from 'api'
 
 const Page = styled.div`
   display: flex;
@@ -10,25 +12,40 @@ const Page = styled.div`
 `
 
 export const App: FC = () => {
+  const [options, setOptions] = useState({ page: 0, limit: 10 })
+  const [data, length] = useData(options, [options])
+
   return (
     <Page>
-      <Table
+      <Table<ResponseData>
+        totalRows={length}
         data={{
           columns: [
+            { id: 'name', title: 'Имя', sortable: true, filterable: true },
             { id: 'date', title: 'Дата' },
-            { id: 'name', title: 'Имя' },
-          ],
-          data: [
             {
-              date: '2022.05.22',
-              name: 'First',
+              id: 'quantity',
+              title: 'Количество',
+              sortable: true,
+              filterable: true,
             },
             {
-              date: '20202.07.12',
-              name: 'Second',
+              id: 'distance',
+              title: 'Расстояние',
+              sortable: true,
+              filterable: true,
             },
           ],
+          rows: data ?? [],
         }}
+        displayMapping={{
+          name: name => name[0].toUpperCase() + name.substring(1),
+          distance: dst => (dst / 1000).toFixed(2) + ' km',
+          quantity: q => q,
+          date: date => new Date(date).toLocaleDateString(),
+        }}
+        options={options}
+        onOptionsChange={setOptions}
       />
     </Page>
   )

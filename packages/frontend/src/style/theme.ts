@@ -1,5 +1,5 @@
 export const theme = {
-  back: '#2a2223',
-  primary: '#ff0062',
-  front: '#ffebed',
+  back: '#141415',
+  primary: '#606dff',
+  front: '#f0f0ff',
 }
