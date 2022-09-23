@@ -36,7 +36,7 @@ app.get('/', (req, res) => {
       else
         return sort_order === 'ascending'
           ? +avalue - +bvalue
-          : +avalue - +bvalue
+          : +bvalue - +avalue
     })
   if (filter && filter_type && filter_value)
     data = data.filter(v => {
