@@ -45,7 +45,7 @@ app.get('/', (req, res) => {
     })
   res
     .header('Content-Length', String(data.length))
-    .send(data.slice(+page * +limit, +limit))
+    .send(data.slice(+page * +limit, +page * +limit + +limit))
 })
 
 app.listen(3264, '0.0.0.0', () => console.log('Server listening at 3264'))
