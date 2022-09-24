@@ -13,6 +13,7 @@ import {
 } from 'react'
 import { Select } from 'components/Select'
 import { Input } from 'components/Input'
+import { Text } from 'components/Text'
 
 /**
  * ###Column Definition
@@ -366,6 +367,9 @@ export const Table = <T extends object>({
     [options],
   )
 
+  /**
+   * Returns filter type options based on column type
+   */
   const filterTypeOptions = useMemo(() => {
     const allowNumeric =
       columns.find(v => v.id === options.filter)?.type === 'number'
@@ -380,6 +384,9 @@ export const Table = <T extends object>({
     )
   }, [options, columns])
 
+  /**
+   * Clear filter value
+   */
   const clearFilter = useCallback(() => {
     onOptionsChange({
       ...options,
@@ -389,6 +396,7 @@ export const Table = <T extends object>({
 
   return (
     <Container>
+      <Text>Фильтр:</Text>
       <Filters>
         <Select
           onChange={e => updateFilterTargetColumn(e.target.value)}
