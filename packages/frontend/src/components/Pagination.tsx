@@ -47,7 +47,7 @@ export const Pagination: FC<PaginationProps> = ({
   onChange,
 }) => {
   const mode = useMemo(() => {
-    if (selected <= 2) return 'block_start' as const
+    if (selected <= 2 || pages < 5) return 'block_start' as const
     if (selected >= pages - 2) return 'block_end' as const
     return 'normal' as const
   }, [pages, selected])
