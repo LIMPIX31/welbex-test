@@ -113,13 +113,8 @@ const StyledTable = styled.table`
     font-weight: bold;
     color: ${theme.primary};
     height: 50px;
-    cursor: pointer;
     transition: all 0.3s;
     position: relative;
-
-    &:hover {
-      background-color: ${mix(0.1, theme.primary, theme.back)};
-    }
 
     svg {
       position: absolute;
@@ -141,6 +136,13 @@ const StyledTable = styled.table`
     align-items: center;
     justify-content: space-between;
     gap: 24px;
+  }
+
+  th[data-clickable] {
+    cursor: pointer;
+    &:hover {
+      background-color: ${mix(0.1, theme.primary, theme.back)};
+    }
   }
 
   thead tr {
@@ -202,6 +204,18 @@ const LoadingOverlay = styled.div<{ active?: boolean }>`
   align-items: center;
   justify-content: center;
   color: ${theme.front};
+`
+
+const ClearButton = styled.button`
+  border: 2px solid ${theme.primary};
+  border-radius: 6px;
+  cursor: pointer;
+  user-select: none;
+  width: 36px;
+  height: 36px;
+  color: ${theme.primary};
+  font-weight: bold;
+  text-align: center;
 `
 
 export const Table = <T extends object>({
@@ -287,7 +301,11 @@ export const Table = <T extends object>({
    */
   const tableColumns = useMemo(() => {
     return columns.map(column => (
-      <th key={column.id} onClick={() => setSortingColumn(column)}>
+      <th
+        key={column.id}
+        onClick={() => setSortingColumn(column)}
+        data-clickable={column.sortable}
+      >
         <section>
           <span>{column.title}</span> {sortingIcon(column)}
         </section>
@@ -362,10 +380,20 @@ export const Table = <T extends object>({
     )
   }, [options, columns])
 
+  const clearFilter = useCallback(() => {
+    onOptionsChange({
+      ...options,
+      filter_value: undefined,
+    })
+  }, [options])
+
   return (
     <Container>
       <Filters>
-        <Select onChange={e => updateFilterTargetColumn(e.target.value)}>
+        <Select
+          onChange={e => updateFilterTargetColumn(e.target.value)}
+          value={options.filter}
+        >
           <option value={undefined}>Не выбрано</option>
           {filterColumnSelectOptions}
         </Select>
@@ -378,8 +406,10 @@ export const Table = <T extends object>({
         <Input
           placeholder={'Введите значение'}
           type={filterValueInputType}
+          value={options.filter_value ?? ''}
           onChange={e => updateFilterValue(e.target.value)}
         />
+        <ClearButton onClick={clearFilter}>X</ClearButton>
       </Filters>
       <StyledTable className={className}>
         <LoadingOverlay active={isFetching}>Loading...</LoadingOverlay>

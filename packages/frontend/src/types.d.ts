@@ -1,1 +1,1 @@
-declare type Primitive = string | number | boolean
+declare type Primitive = string | number
