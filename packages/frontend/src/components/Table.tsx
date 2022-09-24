@@ -28,11 +28,15 @@ export interface ColumnDef {
    */
   title: string
   /**
+   * Column values type
+   */
+  type: 'string' | 'number'
+  /**
    * Adds sorting capability to a column
    */
   sortable?: boolean
   /**
-   * Adds filtering capability to a column if it has a number type
+   * Adds filtering capability to a column
    */
   filterable?: boolean
 }
@@ -207,7 +211,7 @@ export const Table = <T extends object>({
   options,
   onOptionsChange,
   totalRows,
-  isFetching
+  isFetching,
 }: TableProps<T> & { className?: string }) => {
   const [sorting, setSorting] = useState<[string, boolean] | undefined>()
 
@@ -331,8 +335,8 @@ export const Table = <T extends object>({
     (value: string | number) => {
       onOptionsChange({
         ...options,
-        filter: options.filter ?? columns?.[0].id,
-        filter_type: options.filter_type ?? 'equals',
+        filter: options.filter,
+        filter_type: options.filter_type,
         filter_value:
           value !== 0
             ? typeof value === 'string'
@@ -344,20 +348,32 @@ export const Table = <T extends object>({
     [options],
   )
 
+  const filterTypeOptions = useMemo(() => {
+    const allowNumeric =
+      columns.find(v => v.id === options.filter)?.type === 'number'
+    return (
+      <>
+        <option value={undefined}>Не выбрано</option>
+        <option value={'equals'}>Равно</option>
+        {allowNumeric && <option value={'more_than'}>Больше чем</option>}
+        {allowNumeric && <option value={'less_than'}>Меньше чем</option>}
+        <option value={'contains'}>Содержит</option>
+      </>
+    )
+  }, [options, columns])
+
   return (
     <Container>
       <Filters>
         <Select onChange={e => updateFilterTargetColumn(e.target.value)}>
+          <option value={undefined}>Не выбрано</option>
           {filterColumnSelectOptions}
         </Select>
         <Select
-          value={options.filter_type ?? 'equals'}
+          value={options.filter_type}
           onChange={e => updateFilterType(e.target.value)}
         >
-          <option value={'equals'}>Равно</option>
-          <option value={'more_than'}>Больше чем</option>
-          <option value={'less_than'}>Меньше чем</option>
-          <option value={'contains'}>Содержит</option>
+          {filterTypeOptions}
         </Select>
         <Input
           placeholder={'Введите значение'}
@@ -366,9 +382,7 @@ export const Table = <T extends object>({
         />
       </Filters>
       <StyledTable className={className}>
-        <LoadingOverlay active={isFetching}>
-          Loading...
-        </LoadingOverlay>
+        <LoadingOverlay active={isFetching}>Loading...</LoadingOverlay>
         <thead>
           <tr>{tableColumns}</tr>
         </thead>

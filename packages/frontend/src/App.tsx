@@ -21,19 +21,27 @@ export const App: FC = () => {
         totalRows={length}
         data={{
           columns: [
-            { id: 'name', title: 'Имя', sortable: true, filterable: true },
-            { id: 'date', title: 'Дата' },
+            {
+              id: 'name',
+              title: 'Имя',
+              type: 'string',
+              sortable: true,
+              filterable: true,
+            },
+            { id: 'date', title: 'Дата', type: 'number' },
             {
               id: 'quantity',
               title: 'Количество',
               sortable: true,
               filterable: true,
+              type: 'number',
             },
             {
               id: 'distance',
               title: 'Расстояние',
               sortable: true,
               filterable: true,
+              type: 'number',
             },
           ],
           rows: data ?? [],
