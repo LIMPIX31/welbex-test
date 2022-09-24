@@ -4,7 +4,7 @@ console.log(import.meta.env)
 
 export const instance = axios.create({
   baseURL: import.meta.env.PROD
-    ? 'https://welbex-test.onrender.com'
+    ? import.meta.env.API_URL ?? 'https://welbex-test.onrender.com'
     : 'http://localhost:3264',
 })
 
