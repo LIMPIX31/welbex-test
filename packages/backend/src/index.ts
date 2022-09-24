@@ -61,9 +61,7 @@ app.get('/', (req, res) => {
     .send(data.slice(+page * +limit, +page * +limit + +limit))
 })
 
-const PORT = process.env.NODE_ENV === 'production' ? 80 : 3264
-
-app.listen(PORT, '0.0.0.0', () => console.log('Server listening at ' + PORT))
+app.listen(3264, '0.0.0.0', () => console.log('Server listening at 3264'))
 
 process.on('SIGINT', () => {
   console.log('Stopping server')
