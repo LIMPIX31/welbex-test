@@ -2,7 +2,7 @@ import axios from 'axios'
 
 export const instance = axios.create({
   baseURL:
-    process.env.VERCEL_ENV === 'development'
+    import.meta.env.VERCEL_ENV === 'development'
       ? 'http://localhost:3264'
       : 'https://welbex-test.onrender.com',
 })
