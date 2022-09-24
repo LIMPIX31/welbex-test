@@ -13,7 +13,7 @@ const Page = styled.div`
 
 export const App: FC = () => {
   const [options, setOptions] = useState({ page: 0, limit: 10 })
-  const [data, length] = useData(options, [options])
+  const [data, length, isFetching] = useData(options, [options])
 
   return (
     <Page>
@@ -46,6 +46,7 @@ export const App: FC = () => {
         }}
         options={options}
         onOptionsChange={setOptions}
+        isFetching={isFetching}
       />
     </Page>
   )

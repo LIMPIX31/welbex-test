@@ -2,9 +2,9 @@ import axios from 'axios'
 
 export const instance = axios.create({
   baseURL:
-    import.meta.env.VERCEL_ENV === 'development'
-      ? 'http://localhost:3264'
-      : 'https://welbex-test.onrender.com',
+    import.meta.env.VERCEL_ENV === 'production'
+      ? 'https://welbex-test.onrender.com'
+      : 'http://localhost:3264',
 })
 
 export interface ResponseData {

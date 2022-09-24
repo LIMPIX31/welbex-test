@@ -4,8 +4,13 @@ import { mix, rgba } from 'polished'
 import { Pagination } from 'components/Pagination'
 import { FetchDataOptions } from 'api'
 import { mapFactory } from 'utils'
-import { SetStateAction, useEffect, useReducer, useState } from 'react'
-import { useDestruct } from 'hooks/useDestruct'
+import {
+  SetStateAction,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react'
 import { Select } from 'components/Select'
 import { Input } from 'components/Input'
 
@@ -45,6 +50,10 @@ export interface TableData<T> {
 
 export interface TableProps<T> {
   /**
+   * Table is fetching status
+   */
+  isFetching?: boolean
+  /**
    * Total number of table rows
    */
   totalRows: number
@@ -81,6 +90,7 @@ const DownIcon = () => (
 )
 
 const StyledTable = styled.table`
+  position: relative;
   font-size: 1.2rem;
   box-shadow: 0 0 200px 1px ${rgba(theme.primary, 0.2)},
     0 0 0 2px ${theme.primary};
@@ -158,6 +168,7 @@ const StyledTable = styled.table`
 `
 
 const Container = styled.div`
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -168,17 +179,48 @@ const Filters = styled.div`
   gap: 12px;
 `
 
+const LoadingOverlay = styled.div<{ active?: boolean }>`
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  translate: -50% -50%;
+  width: 101%;
+  height: 101%;
+  backdrop-filter: blur(25px);
+  opacity: ${({ active }) => (active ? 1 : 0)};
+  transition: all 0.3s;
+  z-index: 10;
+  pointer-events: none;
+  border-radius: 16px;
+  font-size: 2rem;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: ${theme.front};
+`
+
 export const Table = <T extends object>({
-  data: { rows, columns },
+  data: { rows = [], columns },
   className,
   displayMapping,
   options,
   onOptionsChange,
   totalRows,
+  isFetching
 }: TableProps<T> & { className?: string }) => {
   const [sorting, setSorting] = useState<[string, boolean] | undefined>()
 
-  // Update sorting options
+  /**
+   * reset page on filter or sorting options
+   */
+  useEffect(() => {
+    onOptionsChange({ ...options, page: 0 })
+  }, [sorting, options.filter_value, options.filter, options.filter_type])
+
+  /**
+   * Update sorting options
+   */
   useEffect(() => {
     onOptionsChange({
       ...options,
@@ -187,37 +229,130 @@ export const Table = <T extends object>({
     })
   }, [sorting])
 
-  // reset page on filter or sorting options
-  useEffect(() => {
-    onOptionsChange({ ...options, page: 0 })
-  }, [sorting, options.filter_value, options.filter, options.filter_type])
+  /**
+   * Sets the column for sorting if it has not been set or changes the sorting direction
+   */
+  const setSortingColumn = useCallback((column: ColumnDef) => {
+    column.sortable &&
+      setSorting(sorting => [
+        column.id,
+        sorting?.[0] === column.id ? !sorting?.[1] : false,
+      ])
+  }, [])
+
+  /**
+   * Returns one of the icons depending on the sorting direction, if no sorting is specified, it returns null
+   */
+  const sortingIcon = useCallback(
+    (column: ColumnDef) => {
+      return sorting?.[0] === column.id ? (
+        sorting?.[1] ? (
+          <UpIcon />
+        ) : (
+          <DownIcon />
+        )
+      ) : null
+    },
+    [sorting],
+  )
+
+  /**
+   * Transforms table row data into jsx `<td>` tags
+   */
+  const rowDataToTableData = useCallback(
+    (row: T) => {
+      const mapped = mapFactory(row, displayMapping)
+      return columns.map(column => (
+        <td key={column.id}>{mapped[column.id as keyof T]}</td>
+      ))
+    },
+    [displayMapping, columns],
+  )
+
+  /**
+   * Transforms rows to jsx table `<tr>` tags
+   */
+  const tableRows = useMemo(() => {
+    return rows.map((row, index) => (
+      <tr key={index}>{rowDataToTableData(row)}</tr>
+    ))
+  }, [rows])
+
+  /**
+   * Transforms columns to jsx table `<th>` tags
+   */
+  const tableColumns = useMemo(() => {
+    return columns.map(column => (
+      <th key={column.id} onClick={() => setSortingColumn(column)}>
+        <section>
+          <span>{column.title}</span> {sortingIcon(column)}
+        </section>
+      </th>
+    ))
+  }, [columns, setSortingColumn, sortingIcon])
+
+  const filterColumnSelectOptions = useMemo(() => {
+    return columns.map(
+      column =>
+        column.filterable && (
+          <option value={column.id} key={column.id}>
+            {column.title}
+          </option>
+        ),
+    )
+  }, [columns])
+
+  const updateFilterTargetColumn = useCallback(
+    (value: string) => {
+      onOptionsChange({ ...options, filter: value })
+    },
+    [options],
+  )
+
+  const updateFilterType = useCallback(
+    (type: string) => {
+      onOptionsChange({
+        ...options,
+        filter: options.filter ?? columns?.[0].id,
+        filter_type: type as never,
+      })
+    },
+    [options],
+  )
+
+  const filterValueInputType = useMemo(() => {
+    return options.filter_type === 'equals' ||
+      options.filter_type === 'contains'
+      ? 'text'
+      : 'number'
+  }, [options])
+
+  const updateFilterValue = useCallback(
+    (value: string | number) => {
+      onOptionsChange({
+        ...options,
+        filter: options.filter ?? columns?.[0].id,
+        filter_type: options.filter_type ?? 'equals',
+        filter_value:
+          value !== 0
+            ? typeof value === 'string'
+              ? value.toLowerCase()
+              : value
+            : undefined,
+      })
+    },
+    [options],
+  )
 
   return (
     <Container>
       <Filters>
-        <Select
-          onChange={e =>
-            onOptionsChange({ ...options, filter: e.target.value })
-          }
-        >
-          {columns.map(
-            column =>
-              column.filterable && (
-                <option value={column.id} key={column.id}>
-                  {column.title}
-                </option>
-              ),
-          )}
+        <Select onChange={e => updateFilterTargetColumn(e.target.value)}>
+          {filterColumnSelectOptions}
         </Select>
         <Select
           value={options.filter_type ?? 'equals'}
-          onChange={e =>
-            onOptionsChange({
-              ...options,
-              filter: options.filter ?? columns?.[0].id,
-              filter_type: e.target.value as never,
-            })
-          }
+          onChange={e => updateFilterType(e.target.value)}
         >
           <option value={'equals'}>Равно</option>
           <option value={'more_than'}>Больше чем</option>
@@ -226,65 +361,18 @@ export const Table = <T extends object>({
         </Select>
         <Input
           placeholder={'Введите значение'}
-          type={
-            options.filter_type === 'equals' ||
-            options.filter_type === 'contains'
-              ? 'text'
-              : 'number'
-          }
-          onChange={e =>
-            onOptionsChange({
-              ...options,
-              filter: options.filter ?? columns?.[0].id,
-              filter_type: options.filter_type ?? 'equals',
-              filter_value:
-                e.target.value.length !== 0
-                  ? e.target.value.toLowerCase()
-                  : undefined,
-            })
-          }
+          type={filterValueInputType}
+          onChange={e => updateFilterValue(e.target.value)}
         />
       </Filters>
       <StyledTable className={className}>
+        <LoadingOverlay active={isFetching}>
+          Loading...
+        </LoadingOverlay>
         <thead>
-          <tr>
-            {columns.map(column => (
-              <th
-                key={column.id}
-                onClick={() =>
-                  column.sortable &&
-                  setSorting([
-                    column.id,
-                    sorting?.[0] === column.id ? !sorting?.[1] : false,
-                  ])
-                }
-              >
-                <section>
-                  <span>{column.title}</span>{' '}
-                  {sorting?.[0] === column.id ? (
-                    sorting?.[1] ? (
-                      <UpIcon />
-                    ) : (
-                      <DownIcon />
-                    )
-                  ) : null}
-                </section>
-              </th>
-            ))}
-          </tr>
+          <tr>{tableColumns}</tr>
         </thead>
-        <tbody>
-          {rows.map((row, index) => (
-            <tr key={index}>
-              {(() => {
-                const mapped = mapFactory(row, displayMapping)
-                return columns.map(column => (
-                  <td key={column.id}>{mapped[column.id as keyof T]}</td>
-                ))
-              })()}
-            </tr>
-          ))}
-        </tbody>
+        <tbody>{tableRows}</tbody>
       </StyledTable>
       <Pagination
         pages={totalRows}
