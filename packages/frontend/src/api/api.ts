@@ -1,10 +1,11 @@
 import axios from 'axios'
 
+console.log(import.meta.env)
+
 export const instance = axios.create({
-  baseURL:
-    import.meta.env.NODE_ENV === 'production'
-      ? 'https://welbex-test.onrender.com'
-      : 'http://localhost:3264',
+  baseURL: import.meta.env.PROD
+    ? 'https://welbex-test.onrender.com'
+    : 'http://localhost:3264',
 })
 
 export interface ResponseData {
